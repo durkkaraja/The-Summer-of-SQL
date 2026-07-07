@@ -1,0 +1,1 @@
+Challenges from: https://preppindata.blogspot.com/p/the-challenge-index.html

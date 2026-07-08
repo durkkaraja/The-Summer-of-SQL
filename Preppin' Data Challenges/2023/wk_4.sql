@@ -1,5 +1,6 @@
 --Preppin' Data 2023 Week 4
 
+--Create a CTE unioning all the months of data.
 with months as (
 select *
     ,'January' as Month
@@ -50,6 +51,7 @@ select *
 from pd2023_wk04_december
 )
 
+--Create a CTE reshaping the data so there is a field for each demographic, for each new customer.
 ,months_pivoted as (
 select *
 from months
@@ -59,6 +61,7 @@ for Demographic in ('Ethnicity','Account Type','Date of Birth')
 ) as headers
 )
 
+--Create 'Joining Date' field (minimum to take earliest joining date if a customer appears multiple times), select relevant fields to keep in output.
 select ID 
     ,min(to_date(Joining_day||'-'||Month||'-2023', 'DD-MMMM-YYYY')) as "Joining Date"
     ,"'Ethnicity'"

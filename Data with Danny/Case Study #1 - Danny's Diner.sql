@@ -58,7 +58,30 @@ select customer_id
     ,product_name as most_popular_product
 from cte
 where popularity=1;
+
 --6. Which item was purchased first by the customer after they became a member?
+with cte as (
+    select sales.customer_id
+        ,order_date
+        ,sales.product_id
+        ,product_name
+        ,join_date
+        ,dense_rank() over(
+            partition by sales.customer_id
+            order by order_date asc
+        ) as ranking
+    from sales
+    join members on members.customer_id=sales.customer_id
+    join menu on sales.product_id=menu.product_id
+    where order_date >= join_date 
+)
+select customer_id
+    ,product_name as first_purchase_as_member
+from cte
+where ranking = 1
+
+
+
 --7. Which item was purchased just before the customer became a member?
 --8. What is the total items and amount spent for each member before they became a member?
 --9. If each $1 spent equates to 10 points and sushi has a 2x points multiplier - how many points would each customer have?

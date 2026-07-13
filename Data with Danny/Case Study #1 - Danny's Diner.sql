@@ -156,3 +156,19 @@ select customer_id
     ,sum(price*10*new_member_multiplier*sushi_multiplier) as total_points
 from cte
 group by customer_id;
+
+--Bonus Q: Join all the things
+select sales.customer_id
+    ,sales.order_date
+    ,menu.product_name
+    ,menu.price
+    ,join_date,
+case
+    when order_date>=join_date then 'Y'
+    else 'N'
+end as member
+from sales
+join menu on sales.product_id=menu.product_id
+full join members on sales.customer_id=members.customer_id;
+
+--Bonus Q: Rank all the things

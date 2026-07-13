@@ -75,6 +75,7 @@ with cte as (
     join menu on sales.product_id=menu.product_id
     where order_date >= join_date 
 )
+
 select customer_id
     ,product_name as first_purchase_as_member
 from cte
@@ -96,6 +97,7 @@ with cte as (
     join menu on sales.product_id=menu.product_id
     where order_date < join_date
 )
+
 select customer_id
     ,product_name as last_purchase_before_becoming_member
 from cte
@@ -113,19 +115,44 @@ group by sales.customer_id;
 
 --9. If each $1 spent equates to 10 points and sushi has a 2x points multiplier - how many points would each customer have?
 with cte as (
-select customer_id
-    ,product_name
-    ,price,
-case
-    when product_name = 'sushi' then price*10*2
-    else price*10*1
-end as points_per_order
-from sales
-join menu on sales.product_id=menu.product_id
+    select customer_id
+        ,product_name
+        ,price,
+    case
+        when product_name = 'sushi' then price*10*2
+        else price*10*1
+    end as points_per_order
+    from sales
+    join menu on sales.product_id=menu.product_id
 )
+
 select customer_id
     ,sum(points_per_order) as total_points
 from cte
 group by customer_id;
 
 --10. In the first week after a customer joins the program (including their join date) they earn 2x points on all items, not just sushi - how many points do customers A and B have at the end of January?
+with cte as (
+    select sales.customer_id
+        ,order_date
+        ,join_date
+        ,product_name
+        ,price
+        ,datediff(day,join_date,order_date) as date_diff,
+    case
+        when date_diff between 0 and 6 then 2
+        else 1
+    end as new_member_multiplier,
+    case
+        when product_name = 'sushi' and new_member_multiplier = 1 then 2
+        else 1
+    end as sushi_multiplier
+    from sales
+    join members on sales.customer_id=members.customer_id
+    join menu on sales.product_id=menu.product_id
+    where month(order_date) = 1
+)
+select customer_id
+    ,sum(price*10*new_member_multiplier*sushi_multiplier) as total_points
+from cte
+group by customer_id;

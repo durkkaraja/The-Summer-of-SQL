@@ -172,3 +172,24 @@ join menu on sales.product_id=menu.product_id
 full join members on sales.customer_id=members.customer_id;
 
 --Bonus Q: Rank all the things
+select sales.customer_id
+    ,sales.order_date
+    ,menu.product_name
+    ,menu.price
+    ,join_date,
+case
+    when order_date>=join_date then 'Y'
+    else 'N'
+end as member,
+case
+    when member = 'Y' then dense_rank() over(
+        partition by sales.customer_id
+        order by order_date asc
+        ) 
+    else null
+end as ranking
+from sales
+join menu on sales.product_id=menu.product_id
+full join members on sales.customer_id=members.customer_id;
+
+--but dense rank is including the nulls

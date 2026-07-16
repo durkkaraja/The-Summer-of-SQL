@@ -1,6 +1,6 @@
 --Data with Danny: Case Study #2 - Pizza Runner
 
---A. Pizza Metrics
+-- A. Pizza Metrics
 
 
 -- How many pizzas were ordered?
@@ -12,17 +12,54 @@ select count(distinct customer_id) as unique_customer_orders
 from customer_orders;
 
 -- How many successful orders were delivered by each runner?
--- select runner_id
---     ,count(*)
--- from runner_orders
--- where trim(coalesce(cancellation,'')) != '' and cancellation is not null
--- group by runner_id;
-
 
 -- How many of each type of pizza was delivered?
+
+
 -- How many Vegetarian and Meatlovers were ordered by each customer?
--- What was the maximum number of pizzas delivered in a single order?
--- For each customer, how many delivered pizzas had at least 1 change and how many had no changes?
--- How many pizzas were delivered that had both exclusions and extras?
--- What was the total volume of pizzas ordered for each hour of the day?
--- What was the volume of orders for each day of the week?
+with cte as (
+    select customer_id
+        ,pizza_name
+        ,1 as pizza_count
+    from customer_orders
+    join pizza_names on customer_orders.pizza_id=pizza_names.pizza_id
+)
+
+select *
+from cte
+pivot(sum(pizza_count)
+for pizza_name in ('Meatlovers','Vegetarian')
+) as pvt;
+
+
+-- B. Runner and Customer Expererience
+
+-- How many runners signed up for each 1 week period? (i.e. week starts 2021-01-01)
+select
+    dateadd(
+        'day',
+        floor(datediff('day','2021-01-01'::date,registration_date) / 7) * 7,
+        '2021-01-01'::date
+    ) as week_commencing
+    ,count(runner_id) as runner_signups
+from runners
+where registration_date >= '2021-01-01'
+group by 1 
+order by 1;
+
+-- What was the average time in minutes it took for each runner to arrive at the Pizza Runner HQ to pickup the order?
+with cte as (
+    select runner_id
+        ,datediff('minute', min(order_time), pickup_time) as diff
+    from customer_orders as c
+    join runner_orders as r on c.order_id = r.order_id
+    where lower(pickup_time) != 'null'
+    group by runner_id
+        ,pickup_time
+)
+
+select runner_id
+    ,round(avg(diff),2) as avg_minutes
+from cte
+group by runner_id
+order by runner_id;
